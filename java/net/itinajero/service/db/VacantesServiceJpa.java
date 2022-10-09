@@ -26,13 +26,27 @@ public class VacantesServiceJpa implements IVacantesService {
 	@Override
 	public Vacante buscarPorid(Integer idVacante) {
 		Optional<Vacante> optional = vacantesRepo.findById(idVacante);
-		
+		if (optional.isPresent()) {
+			return optional.get();
+		}
 		return null;
 	}
 
 	@Override
 	public void guardar(Vacante vacante) {
 		vacantesRepo.save(vacante);
+	}
+
+	@Override
+	public List<Vacante> buscarDestacada() {
+		// TODO Auto-generated method stub
+		return vacantesRepo.findByDestacadoAndEstatusOrderByIdDesc(1, "Aprobada");
+	}
+
+	@Override
+	public void eliminar(Integer idVacante) {
+		vacantesRepo.deleteById(idVacante);
+		
 	}
 
 }
