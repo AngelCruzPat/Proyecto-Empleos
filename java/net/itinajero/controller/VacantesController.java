@@ -1,13 +1,16 @@
 package net.itinajero.controller;
 
+
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -32,110 +35,156 @@ import net.itinajero.util.Utileria;
 @RequestMapping("/vacantes")
 public class VacantesController {
 	
-	 @Value("${empleosapp.ruta.imagenes}")
+	@Value("${empleosapp.ruta.imagenes}")
 	private String ruta;
+	
+	
 	
 	@Autowired
 	private IVacantesService serviceVacantes;
 	
+	
 	@Autowired
-	@Qualifier("categoriasServiceJpa")
+	//@Qualifier("categoriasServiceJpa")
 	private ICategoriasService serviceCategorias;
+	
+	
+	
+	
 	
 	@GetMapping("/index")
 	public String mostrarIndex(Model model) {
 		List<Vacante> lista = serviceVacantes.buscarTodas();
-		model.addAttribute("vacantes", lista);
-		
-		return "vacantes/listVacantes";		
+    	model.addAttribute("vacantes", lista);
+		return "vacantes/listVacantes";
 	}
 	
+	
+	
+	@GetMapping(value = "/indexPaginate")
+	public String mostrarIndexPaginado(Model model, Pageable page) {
+	Page<Vacante> lista = serviceVacantes.buscarTodas(page);
+	model.addAttribute("vacantes", lista);
+	return "vacantes/listVacantes";
+	}
+
+	
+	
+	
+	
+	
 	@GetMapping("/create")
-	public String crear(Vacante vacante, Model model) {	
-		
+	public String crear(Vacante vacante, Model model) {
 		return "vacantes/formVacante";
-	}	
+	}
+	
+	
+	
+	
 	
 	@PostMapping("/save")
-	public String guardar(Vacante vacante, BindingResult result, RedirectAttributes attributes,
-						  @RequestParam("archivoImagen") MultipartFile multiPart) {
-		if(result.hasErrors()){
-			for (ObjectError error: result.getAllErrors()) {
-				System.out.println("Ocurrio un Error: " + error.getDefaultMessage());
-			}
+	public String guardar(Vacante vacante, BindingResult result, RedirectAttributes attributes, 
+			@RequestParam("archivoImagen") MultipartFile multiPart ) {
+		
+		if (result.hasErrors()) {
+			
+			for (ObjectError error: result.getAllErrors()){
+				System.out.println("Ocurrio un error: " + error.getDefaultMessage());
+				}
 			
 			return "vacantes/formVacante";
-		}
-		if (!multiPart.isEmpty()){
-			//String ruta = "c:/empleos/img-vacantes/";
+			}
+		
+		
+		
+		if (!multiPart.isEmpty()) {
+			//String ruta = "/empleos/img-vacantes/"; // Linux/MAC
+	//	String  ruta = "c:/empleos/img-vacantes/"; // windows
 			String nombreImagen = Utileria.guardarArchivo(multiPart, ruta);
-			if (nombreImagen != null) {
+			if(nombreImagen != null) {// la imagen si se subio
+				//Procesamos la variable nombreImagen
 				vacante.setImagen(nombreImagen);
 			}
-			
 		}
+		
+		
+		
 		
 		serviceVacantes.guardar(vacante);
 		attributes.addFlashAttribute("msg", "Registro Guardado");
-		System.out.println("Vacante: " + vacante);		
-		return "redirect:/vacantes/index";
+		System.out.println("Vacante: " + vacante);
+		return "redirect:/vacantes/index"; 
 	}
-	/*
+	
+	
+	
+	
+/*
 	@PostMapping("/save")
-	public String guardar(@RequestParam("nombre") String nombre, @RequestParam("descripcion") String descripcion,
-			@RequestParam("estatus") String estatus, @RequestParam("fecha") String fecha ,@RequestParam("destacado") int destacado,
+	public String guardar(@RequestParam("nombre") String nombre, @RequestParam("descripcion") String descripcion, 
+			@RequestParam("estatus") String estatus, @RequestParam("fecha") String fecha, @RequestParam("destacado") int destacado, 
 			@RequestParam("salario") double salario, @RequestParam("detalles") String detalles) {
 		System.out.println("Nombre Vacante: " + nombre);
 		System.out.println("Descripcion: " + descripcion);
 		System.out.println("Estatus: " + estatus);
-		System.out.println("Fecha Publicacion: " + fecha);
+		System.out.println("Fecha Publicación: " + fecha);
 		System.out.println("Destacado: " + destacado);
 		System.out.println("Salario Ofrecido: " + salario);
-		System.out.println("Detalles: : " + detalles);
-		
-		return "vacantes/listVacantes";
+		System.out.println("detalles: " + detalles);
+		return "vacantes/listVacantes"; 
 	}
 	*/
+	
+	
+	
 	@GetMapping("/delete/{id}")
-	public String eliminar(@PathVariable("id") int idVacante, RedirectAttributes attributes) {
-		System.out.println("Borrando vacante con ID: " + idVacante);
-		serviceVacantes.eliminar(idVacante);	
-		attributes.addFlashAttribute("msg","La Vacante fue Eliminada!");
+	public String eliminar(@PathVariable ("id") int idVacante, RedirectAttributes attributes) {
+		System.out.println("Borrando vacante con id: " +idVacante );
+		serviceVacantes.eliminar(idVacante);
+		attributes.addFlashAttribute("msg", "La vacante fue eliminada!");
 		return "redirect:/vacantes/index";
+		
 	}
+	
+	
 	
 	@GetMapping("/edit/{id}")
 	public String editar(@PathVariable("id") int idVacante, Model model) {
-		Vacante vacante = serviceVacantes.buscarPorid(idVacante);
+		Vacante vacante = serviceVacantes.buscarPorId(idVacante);
 		model.addAttribute("vacante", vacante);
-		
 		
 		return "vacantes/formVacante";
 	}
 	
-
+	
+	
+	
 	@GetMapping("/view/{id}")
 	public String verDetalle(@PathVariable("id") int idVacante, Model model) {
 		
-		Vacante vacante = serviceVacantes.buscarPorid(idVacante);
+		Vacante vacante =serviceVacantes.buscarPorId(idVacante);
 		
-		System.out.println("Vacante" + vacante);
+		System.out.println("Vacante:" + vacante);
 		model.addAttribute("vacante", vacante);
 		
-		// buscar detalles de la vacante en la base de datos.......................
+		//buscar los detalles de vacante id
 		
 		return "detalle";
+		
 	}
 	
 	@ModelAttribute
 	public void setGenericos(Model model) {
-		model.addAttribute("categorias", serviceCategorias.buscarTodas());
+		model.addAttribute("categorias", serviceCategorias.buscarTodas() );	
 	}
+
 	
 	@InitBinder
 	public void initBinder(WebDataBinder webDataBinder) {
-		SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-		webDataBinder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, false));
+	SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+	webDataBinder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, false));
 	}
+	
+	
 	
 }
