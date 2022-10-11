@@ -82,7 +82,7 @@ public class CategoriasController {
 	public String eliminar(@PathVariable ("id") int idCategoria, RedirectAttributes attributes) {
 		System.out.println("Borrando vacante con id: " + idCategoria);
 		serviceCategorias.eliminar(idCategoria);
-		attributes.addFlashAttribute("msg", "La vacante fue eliminada!");
+		attributes.addFlashAttribute("msg", "La Categoria fue eliminada!");
 		return "redirect:/categorias/index";
 		
 	}
