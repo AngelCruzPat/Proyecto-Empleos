@@ -43,6 +43,7 @@ public class DatabaseWebSecurity extends WebSecurityConfigurerAdapter {
 		.antMatchers("/", 
 			"/signup",
 			"/search",
+			"/bcrypt/**",
 			"/vacantes/view/**").permitAll()
 		
 		// Asignar permisos a URLs por ROLES
